@@ -1,9 +1,8 @@
-use futures::future;
-use gdal::{errors::GdalError, Dataset};
+use futures::{stream, StreamExt, TryStreamExt};
+use gdal::Dataset;
 use parquet::{
     basic::{self, Compression, Repetition},
     column::writer::ColumnWriter,
-    errors::ParquetError,
     file::{
         properties::{WriterProperties, WriterPropertiesBuilder},
         writer::{FileWriter, SerializedFileWriter},
@@ -18,92 +17,77 @@ use rusoto_s3::{
     GetObjectError, GetObjectRequest, ListObjectsV2Output, ListObjectsV2Request, Object, S3Client,
     S3,
 };
-use std::{error::Error, fmt::Debug, path::Path, sync::Arc};
+use std::{
+    error::Error,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use tokio::{
     fs::{self, File},
-    io::{AsyncReadExt, AsyncWriteExt},
     task,
 };
 use tracing::instrument;
 use tracing_subscriber::fmt::format::FmtSpan;
 
-const TIF_DIR: &'static str = "tif";
-const PARQUET_DIR: &'static str = "parquet";
-const BUCKET: &'static str = "raster";
-const PREFIX: &'static str = "AW3D30/AW3D30_global/";
-const ENDPOINT: &'static str = "opentopography.s3.sdsc.edu";
+const TIF_DIR: &str = "tif";
+const PARQUET_DIR: &str = "parquet";
+const BUCKET: &str = "raster";
+const PREFIX: &str = "AW3D30/AW3D30_global/";
+const ENDPOINT: &str = "opentopography.s3.sdsc.edu";
 
-#[instrument(err, skip(client, key, size))]
-async fn get_object(
-    client: &S3Client,
-    key: &str,
-    size: usize,
-) -> Result<Vec<u8>, RusotoError<GetObjectError>> {
-    let mut buf = Vec::with_capacity(size);
-    client
+#[instrument(err, skip(client))]
+async fn download_object(
+    client: S3Client,
+    key: String,
+) -> Result<PathBuf, RusotoError<GetObjectError>> {
+    let path = Path::new(TIF_DIR).join(Path::new(&key).file_name().unwrap());
+    let mut file = File::create(&path).await?;
+    let mut bytes = client
         .get_object(GetObjectRequest {
             bucket: BUCKET.to_string(),
-            key: key.to_string(),
+            key,
             ..Default::default()
         })
         .await?
         .body
-        .expect("body")
-        .into_async_read()
-        .read_to_end(&mut buf)
-        .await?;
-    Ok(buf)
+        .unwrap()
+        .into_async_read();
+    tokio::io::copy(&mut bytes, &mut file).await?;
+    Ok(path)
 }
 
-#[instrument(err, skip(path, buf))]
-async fn write_file<T>(path: T, buf: Vec<u8>) -> Result<(), std::io::Error>
-where
-    T: Debug + AsRef<Path>,
-{
-    File::create(path.as_ref()).await?.write_all(&buf).await?;
-    Ok(())
-}
-
-#[instrument(err)]
-fn read_file<T>(path: T) -> Result<Vec<((f64, f64), i32)>, GdalError>
-where
-    T: Debug + AsRef<Path>,
-{
+#[instrument(fields(key = %path.file_stem().unwrap().to_str().unwrap()), skip(path, schema, writer_props), err)]
+fn write_parquet(
+    path: PathBuf,
+    schema: Arc<Type>,
+    writer_props: Arc<WriterProperties>,
+) -> Result<(), Box<dyn std::error::Error>> {
     let dataset = Dataset::open(path.as_ref())?;
     let gt = dataset.geo_transform()?;
     let rasterband = dataset.rasterband(1)?;
-    Ok(rasterband
+    let capacity = rasterband.x_size() * rasterband.y_size();
+    let mut lat = Vec::with_capacity(capacity);
+    let mut lon = Vec::with_capacity(capacity);
+    let mut elevation = Vec::with_capacity(capacity);
+    rasterband
         .read_band_as::<i32>()?
         .data
         .chunks_exact(rasterband.x_size())
         .enumerate()
-        .flat_map(|(y, line)| {
-            line.iter().enumerate().map(move |(x, elevation)| {
+        .for_each(|(y, line)| {
+            line.iter().enumerate().for_each(|(x, elev)| {
                 // https://gdal.org/user/raster_data_model.html#affine-geotransform
-                let lon = gt[0] + x as f64 * gt[1] + y as f64 * gt[2];
-                let lat = gt[3] + x as f64 * gt[4] + y as f64 * gt[5];
-                ((lat, lon), *elevation)
-            })
-        })
-        .collect())
-}
+                lon.push(gt[0] + x as f64 * gt[1] + y as f64 * gt[2]);
+                lat.push(gt[3] + x as f64 * gt[4] + y as f64 * gt[5]);
+                elevation.push(*elev);
+            });
+        });
 
-#[instrument(skip(schema, writer_props, data), err)]
-fn write_parquet<T>(
-    path: T,
-    schema: Arc<Type>,
-    writer_props: Arc<WriterProperties>,
-    data: (Vec<f64>, Vec<f64>, Vec<i32>),
-) -> Result<(), ParquetError>
-where
-    T: Debug + AsRef<Path>,
-{
-    let (lat, lon, elevation) = data;
-    let mut writer =
-        SerializedFileWriter::new(std::fs::File::create(path.as_ref())?, schema, writer_props)?;
-
+    let path = Path::new(PARQUET_DIR)
+        .join(path.file_stem().unwrap())
+        .with_extension("parquet");
+    let mut writer = SerializedFileWriter::new(std::fs::File::create(path)?, schema, writer_props)?;
     let mut row_writer = writer.next_row_group()?;
-
     if let Some(mut col_writer) = row_writer.next_column()? {
         match col_writer {
             ColumnWriter::DoubleColumnWriter(ref mut c) => c.write_batch(&lat, None, None)?,
@@ -130,50 +114,10 @@ where
     Ok(())
 }
 
-#[instrument(fields(key = %object.key.as_ref().unwrap()[PREFIX.len()..]), skip(client, object, schema, writer_props))]
-async fn process(
-    client: S3Client,
-    object: Object,
-    schema: Arc<Type>,
-    writer_props: Arc<WriterProperties>,
-) -> Result<(), Box<dyn Error + Send>> {
-    let key = object.key.unwrap().to_string();
-    let size = object.size.unwrap() as usize;
-
-    let buf = get_object(&client, &key, size)
-        .await
-        .expect("get_object failed");
-
-    let file_name = Path::new(&key).file_name().unwrap();
-    let path = Path::new(TIF_DIR).join(file_name);
-
-    write_file(&path, buf).await.expect("write_file failed");
-
-    let (coordinate, elevation): (Vec<(f64, f64)>, _) =
-        task::spawn_blocking(move || read_file(&path).unwrap())
-            .await
-            .expect("read_file failed")
-            .into_iter()
-            .unzip();
-    let (lat, lon) = coordinate.into_iter().unzip();
-
-    let path = Path::new(PARQUET_DIR)
-        .join(file_name)
-        .with_extension("parquet");
-
-    task::spawn_blocking(move || {
-        write_parquet(&path, schema, writer_props, (lat, lon, elevation)).unwrap()
-    })
-    .await
-    .expect("write_parquet");
-
-    Ok(())
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::fmt()
-        .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+        .with_span_events(FmtSpan::CLOSE)
         .init();
 
     // Create a client that connects to the OpenTopography MinIO storage server.
@@ -223,7 +167,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         WriterProperties::builder().set_compression(Compression::ZSTD),
     ));
 
-    let mut tasks = Vec::new();
+    let mut objects = Vec::default();
     loop {
         let ListObjectsV2Output {
             contents,
@@ -232,22 +176,30 @@ async fn main() -> Result<(), Box<dyn Error>> {
             ..
         } = client.list_objects_v2(req.clone()).await?;
 
-        contents.unwrap().into_iter().for_each(|obj| {
-            tasks.push(tokio::spawn(process(
-                client.clone(),
-                obj,
-                schema.clone(),
-                writer_props.clone(),
-            )));
-        });
+        // Collect all objects keys.
+        if let Some(contents) = contents {
+            objects.extend(contents.into_iter().map(|Object { key, .. }| key.unwrap()))
+        }
+
+        // Fetch next object when needed.
         req.continuation_token = next_continuation_token;
         if let Some(false) = is_truncated {
             break;
         }
     }
 
-    // Wait for all tasks.
-    future::try_join_all(tasks).await?;
+    stream::iter(objects)
+        .map(|key| task::spawn(download_object(client.clone(), key)))
+        .buffer_unordered(50)
+        .try_for_each_concurrent(None, |path| {
+            let path = path.unwrap();
+            let schema = schema.clone();
+            let writer_props = writer_props.clone();
+            task::spawn_blocking(move || {
+                write_parquet(path, schema, writer_props).unwrap();
+            })
+        })
+        .await?;
 
     Ok(())
 }
