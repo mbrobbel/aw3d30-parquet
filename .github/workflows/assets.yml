@@ -1,7 +1,6 @@
 name: Assets
 
 on:
-  push:
   release:
     types:
     - created
