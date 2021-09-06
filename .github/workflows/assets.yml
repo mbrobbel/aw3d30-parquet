@@ -11,6 +11,8 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Install GDAL
+      run: brew install gdal
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
@@ -41,6 +43,8 @@ jobs:
           - powerpc64le-unknown-linux-gnu
     steps:
     - uses: actions/checkout@v2
+    - name: Install GDAL
+      run: sudo apt-get install -y libgdal-dev
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
@@ -64,26 +68,3 @@ jobs:
         asset_path: aw3d30-parquet-${{ github.event.release.tag_name }}-${{ matrix.target }}.tar.gz
         asset_name: aw3d30-parquet-${{ github.event.release.tag_name }}-${{ matrix.target }}.tar.gz
         asset_content_type: application/gzip
-
-  windows:
-    name: Windows
-    runs-on: windows-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-    - uses: actions-rs/cargo@v1
-      with:
-        command: build
-        args: --release
-    - name: Create archive
-      run: Compress-Archive target\release\aw3d30-parquet.exe aw3d30-parquet-${{ github.event.release.tag_name }}-x86_64-pc-windows-msvc.zip
-    - uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: aw3d30-parquet-${{ github.event.release.tag_name }}-x86_64-pc-windows-msvc.zip
-        asset_name: aw3d30-parquet-${{ github.event.release.tag_name }}-x86_64-pc-windows-msvc.zip
-        asset_content_type: application/zip

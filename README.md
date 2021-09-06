@@ -24,7 +24,7 @@ There are release binaries available on GitHub. Download, extract and run.
 
 ### Cargo
 
-If you have Rust installed you can build and install from source:
+If you have Rust installed you can build and install from source. You need [GDAL](https://gdal.org/index.html) development files.
 
 ```
 cargo install --git https://github.com/mbrobbel/aw3d30-parquet.git
@@ -35,6 +35,7 @@ cargo install --git https://github.com/mbrobbel/aw3d30-parquet.git
 ### Requirements
 
 - [Rust](https://rustup.rs) (stable)
+- [GDAL](https://gdal.org/index.html) development files
 
 Build and run:
 
