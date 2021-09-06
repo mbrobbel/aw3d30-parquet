@@ -47,6 +47,8 @@ jobs:
         toolchain: stable
         override: true
     - uses: actions-rs/cargo@v1
+      env:
+        GDAL_STATIC:
       with:
         command: build
         args: --release
