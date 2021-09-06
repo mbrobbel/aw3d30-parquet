@@ -67,12 +67,13 @@ impl Set {
     fn filter(&self, coordinate: Coordinate) -> bool {
         match self {
             Self::Netherlands => {
-                matches!(coordinate.lat, Lat::North(y) if (50..=53).contains(&y))
-                    && matches!(coordinate.lon, Lon::East(x) if (3..=7).contains(&x))
+                matches!(coordinate.lat, Lat::North(ref y) if (50..=53).contains(y))
+                    && matches!(coordinate.lon, Lon::East(ref x) if (3..=7).contains(x))
             }
             Self::Europe => {
-                matches!(coordinate.lat, Lat::North(y) if y >= 50 && y <= 53)
-                    && matches!(coordinate.lon, Lon::East(x) if x >= 3 && x<= 7)
+                matches!(coordinate.lat, Lat::North(ref y) if (23..=80).contains(y))
+                    && (matches!(coordinate.lon, Lon::West(x) if x <= 25)
+                        || matches!(coordinate.lon, Lon::East(x) if x <= 49))
             }
             Self::World => true,
         }
