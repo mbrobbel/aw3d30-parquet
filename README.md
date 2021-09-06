@@ -20,14 +20,21 @@ Application to download [ALOS World 3D 30 meter DEM](https://www.eorc.jaxa.jp/AL
 
 ### Binaries
 
-There are release binaries available on GitHub. Download, extract and run.
+There are binaries available for Linux and macOS as [release assets](https://github.com/mbrobbel/aw3d30-parquet/releases/latest).
+On macOS you need to install `gdal` (e.g. `brew install gdal`).
 
-### Cargo
+## Docker
 
-If you have Rust installed you can build and install from source. You need [GDAL](https://gdal.org/index.html) development files.
+You can build a Docker image that runs the application:
 
 ```
-cargo install --git https://github.com/mbrobbel/aw3d30-parquet.git
+docker build -t aw3d30 https://github.com/mbrobbel/aw3d30-parquet.git
+```
+
+Then you can run a container to download and write Parquet files:
+
+```
+docker run -it --rm -v `pwd`:/io aw3d30 -t /io/tif -p /io/parquet <set>
 ```
 
 ## Build
@@ -37,7 +44,13 @@ cargo install --git https://github.com/mbrobbel/aw3d30-parquet.git
 - [Rust](https://rustup.rs) (stable)
 - [GDAL](https://gdal.org/index.html) development files
 
-Build and run:
+### Cargo
+
+```
+cargo install --git https://github.com/mbrobbel/aw3d30-parquet.git
+```
+
+Or clone the repository and run:
 
 ```
 cargo run --release
