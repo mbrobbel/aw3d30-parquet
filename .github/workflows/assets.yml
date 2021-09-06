@@ -52,7 +52,7 @@ jobs:
         args: --release
     - name: Create archive
       working-directory: ./target/release
-      run: tar -czf ../../../aw3d30-parquet-${{ github.event.release.tag_name }}-${{ matrix.target }}.tar.gz aw3d30-parquet
+      run: tar -czf ../../aw3d30-parquet-${{ github.event.release.tag_name }}-${{ matrix.target }}.tar.gz aw3d30-parquet
     - uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
