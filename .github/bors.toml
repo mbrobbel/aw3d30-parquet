@@ -1,0 +1,8 @@
+status = [
+    "Check",
+    "Test",
+    "Rustfmt",
+    "Clippy"
+]
+delete_merged_branches = true
+timeout_sec = 600
