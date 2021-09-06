@@ -1,6 +1,7 @@
 name: Assets
 
 on:
+  push:
   release:
     types:
     - created
@@ -45,18 +46,14 @@ jobs:
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: stable
-        target: ${{ matrix.target }}
         override: true
     - uses: actions-rs/cargo@v1
       with:
         command: build
-        args: --release --target ${{ matrix.target }}
-        use-cross: true
+        args: --release
     - name: Create archive
-      working-directory: ./target/${{ matrix.target }}/release
-      run: |
-        shopt -s extglob
-        tar -czf ../../../aw3d30-parquet-${{ github.event.release.tag_name }}-${{ matrix.target }}.tar.gz @(aw3d30-parquet|aw3d30-parquet.exe)
+      working-directory: ./target/release
+      run: tar -czf ../../../aw3d30-parquet-${{ github.event.release.tag_name }}-${{ matrix.target }}.tar.gz aw3d30-parquet
     - uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
