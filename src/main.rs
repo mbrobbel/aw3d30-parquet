@@ -285,7 +285,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             .build()?,
     );
     let writer_props = Arc::new(WriterPropertiesBuilder::build(
-        WriterProperties::builder().set_compression(Compression::ZSTD),
+        WriterProperties::builder().set_compression(Compression::SNAPPY),
     ));
 
     let re = Regex::new(r"ALPSMLC30_(?P<y>[NS])(?P<lat>\d{3})(?P<x>[EW])(?P<lon>\d{3})_DSM")?;
