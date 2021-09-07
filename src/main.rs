@@ -55,11 +55,11 @@ struct Opt {
 
 #[derive(Copy, Clone, Debug, StructOpt)]
 enum Set {
-    /// Prepare data for the Netherlands (Requires ~300MB disk space)
+    /// Prepare data for the Netherlands (Requires ~300 MiB disk space)
     Netherlands,
-    /// Prepare data for Europe
+    /// Prepare data for Europe (Requires ~43 GiB disk space)
     Europe,
-    /// Prepare data for the World (Requires ~400GB disk space)
+    /// Prepare data for the World (Requires ~400 GiB disk space)
     World,
 }
 
