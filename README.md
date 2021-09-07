@@ -32,6 +32,13 @@ Run a container to download and write Parquet files:
 docker run -it --rm -v `pwd`:/io aw3d30 -t /io/tif -p /io/parquet <set>
 ```
 
+The following pre-defined sets are supported:
+
+* `netherlands` (requires ~300 MiB of disk space)
+* `europe` (~43 GiB)
+* `world` (~400 GiB)
+
+
 ## Build
 
 ### Requirements
