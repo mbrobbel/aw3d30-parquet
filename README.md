@@ -23,7 +23,7 @@ Application to download [ALOS World 3D 30 meter DEM](https://www.eorc.jaxa.jp/AL
 You can build a Docker image that runs the application:
 
 ```
-docker build -t aw3d30 https://github.com/mbrobbel/aw3d30-parquet.git
+docker build -t aw3d30 https://github.com/mbrobbel/aw3d30-parquet.git#main
 ```
 
 Run a container to download and write Parquet files:
