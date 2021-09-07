@@ -1,10 +1,11 @@
-FROM ubuntu:latest
+FROM rust:latest as builder
+RUN apt-get update && apt-get install -y libgdal-dev
+WORKDIR /usr/src/myapp
+COPY . .
+RUN cargo install --path .
 
-ENV VERSION 0.2.0
-
-WORKDIR /
-RUN apt-get update && \
-  apt-get install -y curl && \
-  curl -L https://github.com/mbrobbel/aw3d30-parquet/releases/download/${VERSION}/aw3d30-parquet-${VERSION}-x86_64-unknown-linux-gnu.tar.gz | tar xz
-ENTRYPOINT [ "/aw3d30-parquet" ]
-CMD [ "help" ]
+FROM debian:buster-slim
+RUN apt-get update && apt-get install -y libgdal20 && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /usr/local/cargo/bin/aw3d30-parquet /usr/local/bin/aw3d30-parquet
+ENTRYPOINT [ "aw3d30-parquet" ]
+CMD ["help"]

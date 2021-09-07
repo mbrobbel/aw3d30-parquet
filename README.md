@@ -18,12 +18,7 @@ Application to download [ALOS World 3D 30 meter DEM](https://www.eorc.jaxa.jp/AL
 
 ## Install
 
-### Binaries
-
-There are binaries available for Linux and macOS as [release assets](https://github.com/mbrobbel/aw3d30-parquet/releases/latest).
-On macOS you need to install `gdal` (e.g. `brew install gdal`).
-
-## Docker
+### Docker
 
 You can build a Docker image that runs the application:
 
@@ -31,7 +26,7 @@ You can build a Docker image that runs the application:
 docker build -t aw3d30 https://github.com/mbrobbel/aw3d30-parquet.git
 ```
 
-Then you can run a container to download and write Parquet files:
+Run a container to download and write Parquet files:
 
 ```
 docker run -it --rm -v `pwd`:/io aw3d30 -t /io/tif -p /io/parquet <set>
@@ -53,7 +48,7 @@ cargo install --git https://github.com/mbrobbel/aw3d30-parquet.git
 Or clone the repository and run:
 
 ```
-cargo run --release
+cargo install --path .
 ```
 
 ## License

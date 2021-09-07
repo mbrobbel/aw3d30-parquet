@@ -1,6 +1,6 @@
 [package]
 name = "aw3d30-parquet"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2018"
 description = "Download ALOS World 3D 30 meter DEM GeoTIFFs and convert them to Parquet"
 

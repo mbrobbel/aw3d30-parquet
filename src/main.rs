@@ -41,7 +41,7 @@ const ENDPOINT: &str = "opentopography.s3.sdsc.edu";
 /// Download ALOS World 3D 30 meter DEM GeoTIFFs and convert them to Parquet
 #[derive(StructOpt)]
 struct Opt {
-    /// Output dir for GeoTiff files
+    /// Output dir for GeoTIFF files
     #[structopt(short = "t", long = "tif", default_value = TIF_DIR)]
     tif_dir: PathBuf,
 
