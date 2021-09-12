@@ -1,4 +1,4 @@
-FROM rust:latest as builder
+FROM rust:buster as builder
 RUN apt-get update && apt-get install -y libgdal-dev
 WORKDIR /usr/src/myapp
 COPY . .
