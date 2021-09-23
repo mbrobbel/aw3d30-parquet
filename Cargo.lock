@@ -470,8 +470,7 @@ dependencies = [
 [[package]]
 name = "gdal"
 version = "0.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e386ec84951cd81fc3bb73084fcf438d8325935565e0c485278468f09f27b70b"
+source = "git+https://github.com/georust/gdal?rev=6ad95e7f977f5ef69d835d3507c93b884e4ae8ae#6ad95e7f977f5ef69d835d3507c93b884e4ae8ae"
 dependencies = [
  "bitflags",
  "gdal-sys",
@@ -484,8 +483,7 @@ dependencies = [
 [[package]]
 name = "gdal-sys"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a3cbe455a1956d8bb388ff7cd7f57c23215dbee46198a0f35688fd1fd604ca1"
+source = "git+https://github.com/georust/gdal?rev=6ad95e7f977f5ef69d835d3507c93b884e4ae8ae#6ad95e7f977f5ef69d835d3507c93b884e4ae8ae"
 dependencies = [
  "libc",
  "pkg-config",
