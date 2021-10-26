@@ -14,4 +14,4 @@ rusoto_s3 = "0.47"
 structopt = "0.3"
 tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
-tracing-subscriber = "0.2"
+tracing-subscriber = "0.3"
