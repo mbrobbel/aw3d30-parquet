@@ -57,6 +57,8 @@ struct Opt {
 enum Set {
     /// Prepare data for the Netherlands (Requires ~300 MiB disk space)
     Netherlands,
+    /// Prepare data for France (Requires ~5 GiB disk space)
+    France,
     /// Prepare data for Europe (Requires ~43 GiB disk space)
     Europe,
     /// Prepare data for the World (Requires ~400 GiB disk space)
@@ -69,6 +71,11 @@ impl Set {
             Self::Netherlands => {
                 matches!(coordinate.lat, Lat::North(ref y) if (50..=53).contains(y))
                     && matches!(coordinate.lon, Lon::East(ref x) if (3..=7).contains(x))
+            }
+            Self::France => {
+                matches!(coordinate.lat, Lat::North(ref y) if (42..=51).contains(y))
+                    && (matches!(coordinate.lon, Lon::West(x) if x <= 6)
+                        || matches!(coordinate.lon, Lon::East(x) if x <= 9))
             }
             Self::Europe => {
                 matches!(coordinate.lat, Lat::North(ref y) if (23..=80).contains(y))

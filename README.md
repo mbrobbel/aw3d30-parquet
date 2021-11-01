@@ -13,7 +13,7 @@ Application to download [ALOS World 3D 30 meter DEM](https://www.eorc.jaxa.jp/AL
   ISPRS Annals of the Photogrammetry, Remote Sensing and Spatial Information Sciences, pp.71-76, Vol.II-4, 2014
 
 - _Japan Aerospace Exploration Agency (2021)_
-  **ALOS World 3D 30 meter DEM. V3.2, Jan 2021.** 
+  **ALOS World 3D 30 meter DEM. V3.2, Jan 2021.**
   Distributed by OpenTopography. doi: [10.5069/G94M92HB](https://doi.org/10.5069/G94M92HB)
 
 ## Install
@@ -34,10 +34,10 @@ docker run -it --rm -v `pwd`:/io aw3d30 -t /io/tif -p /io/parquet <set>
 
 The following pre-defined sets are supported:
 
-* `netherlands` (requires ~300 MiB of disk space)
-* `europe` (~43 GiB)
-* `world` (~400 GiB)
-
+- `netherlands` (requires ~300 MiB of disk space)
+- `france` (requires ~5 GiB of disk space)
+- `europe` (~43 GiB)
+- `world` (~400 GiB)
 
 ## Build
 
