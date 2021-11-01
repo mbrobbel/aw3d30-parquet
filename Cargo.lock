@@ -470,7 +470,7 @@ dependencies = [
 [[package]]
 name = "gdal"
 version = "0.9.0"
-source = "git+https://github.com/georust/gdal?rev=6ad95e7f977f5ef69d835d3507c93b884e4ae8ae#6ad95e7f977f5ef69d835d3507c93b884e4ae8ae"
+source = "git+https://github.com/georust/gdal.git?rev=6ad95e7f977f5ef69d835d3507c93b884e4ae8ae#6ad95e7f977f5ef69d835d3507c93b884e4ae8ae"
 dependencies = [
  "bitflags",
  "gdal-sys",
@@ -483,7 +483,7 @@ dependencies = [
 [[package]]
 name = "gdal-sys"
 version = "0.5.0"
-source = "git+https://github.com/georust/gdal?rev=6ad95e7f977f5ef69d835d3507c93b884e4ae8ae#6ad95e7f977f5ef69d835d3507c93b884e4ae8ae"
+source = "git+https://github.com/georust/gdal.git?rev=6ad95e7f977f5ef69d835d3507c93b884e4ae8ae#6ad95e7f977f5ef69d835d3507c93b884e4ae8ae"
 dependencies = [
  "libc",
  "pkg-config",
